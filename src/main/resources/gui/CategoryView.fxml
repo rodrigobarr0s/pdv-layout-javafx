@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox prefHeight="400" prefWidth="600" spacing="10" style="-fx-background-color: #ecf0f1;" xmlns="http://javafx.com/javafx/21.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.gui.controller.CategoryController">
+    
+    <!-- Padding corrigido -->
+    <padding>
+        <Insets bottom="15" left="15" right="15" top="15" />
+    </padding>
+
+    <!-- Título -->
+    <Label style="-fx-font-size: 18px; -fx-text-fill: #2c3e50;" text="Cadastro de Categorias" />
+
+    <!-- Barra de ferramentas -->
+    <ToolBar>
+        <Button fx:id="buttonNovaCategoria" onAction="#onbuttonNovaCategoriaAction" style="-fx-background-color: #3498db; -fx-text-fill: white;" text="Nova Categoria" />
+    </ToolBar>
+
+    <!-- Tabela de categorias -->
+    <TableView fx:id="tableViewCategory" prefHeight="300">
+        <columns>
+            <TableColumn fx:id="tableColumnId" prefWidth="100" text="ID" />
+            <TableColumn fx:id="tableColumnName" prefWidth="400" text="Nome" />
+        </columns>
+    </TableView>
+
+</VBox>

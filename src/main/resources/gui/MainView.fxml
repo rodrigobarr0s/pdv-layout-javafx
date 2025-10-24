@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/21.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.gui.controller.MainController">
+
+    <!-- Top: Cabeçalho -->
+    <top>
+        <HBox spacing="20" style="-fx-background-color: #2c3e50;">
+            <padding>
+                <Insets bottom="15" left="15" right="15" top="15" />
+            </padding>
+            <Label style="-fx-text-fill: white; -fx-font-size: 20px;" text="Sistema Principal" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Label fx:id="lblDateTime" style="-fx-text-fill: white;" />
+        </HBox>
+    </top>
+
+    <!-- Center: Conteúdo com rolagem -->
+    <center>
+        <ScrollPane fx:id="scrollPane" fitToHeight="true" fitToWidth="true">
+            <content>
+                <VBox prefWidth="900.0" spacing="10" style="-fx-background-color: #ecf0f1;">
+                    <padding>
+                        <Insets bottom="15" left="15" right="15" top="15" />
+                    </padding>
+                    <MenuBar style="-fx-background-color: #2c3e50;">
+                        <menus>
+                            <Menu styleClass="menu-title" text="PDV">
+                                <items>
+                                    <MenuItem fx:id="menuItemVendas" onAction="#onMenuItemVendasAction" text="Vendas" />
+                                </items>
+                            </Menu>
+                            <Menu styleClass="menu-title" text="Cadastro">
+                                <items>
+                                    <MenuItem fx:id="menuItemCategory" onAction="#onMenuItemCategoryAction" text="Categoria" />
+                                </items>
+                            </Menu>
+                            <Menu styleClass="menu-title" text="Edit">
+                                <items>
+                                    <MenuItem text="Delete" />
+                                </items>
+                            </Menu>
+                            <Menu styleClass="menu-title" text="Help">
+                                <items>
+                                    <MenuItem text="About" />
+                                </items>
+                            </Menu>
+                        </menus>
+                    </MenuBar>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+
+    <!-- Bottom: Rodapé -->
+    <bottom>
+        <HBox spacing="10" style="-fx-background-color: #ecf0f1;">
+            <padding>
+                <Insets bottom="10" left="10" right="10" top="10" />
+            </padding>
+            <Label text="Operador:" />
+            <Label fx:id="lblOperator" />
+        </HBox>
+    </bottom>
+
+</BorderPane>
