@@ -7,7 +7,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 
-import com.example.application.Main;
 import com.example.model.services.CategoryService;
 import com.example.model.services.ProductService;
 
@@ -22,7 +21,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 
 public class MainController implements Initializable {
@@ -84,9 +85,11 @@ public class MainController implements Initializable {
     private synchronized <T> void loadBorderPaneView(String path, Consumer<T> controllerConsumer) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(path));
-
-            Scene mainScene = Main.getMainScene();
-            mainScene.setRoot(loader.load());
+            BorderPane root = loader.load();
+            Scene scene = new Scene(root);
+            Stage stage = new Stage();
+            stage.setScene(scene);
+            stage.show();
 
             controllerConsumer.accept(loader.getController());
         } catch (IOException e) {

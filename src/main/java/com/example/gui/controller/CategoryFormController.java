@@ -8,6 +8,11 @@ import javafx.util.Duration;
 
 public class CategoryFormController {
 
+    private static final String ERROR_STYLE = "-fx-border-color: #D9534F; " +
+            "-fx-border-width: 1.5px; " +
+            "-fx-border-radius: 5px; " +
+            "-fx-background-radius: 5px;";
+
     @FXML
     private TextField textFieldId;
 
@@ -19,11 +24,6 @@ public class CategoryFormController {
         String name = txtName.getText();
         if (name == null || name.trim().isEmpty()) {
             // Aplica borda vermelha ao campo
-            txtName.setStyle(
-                    "-fx-border-color: #D9534F; " + // vermelho elegante, estilo Bootstrap
-                            "-fx-border-width: 1.5px; " +
-                            "-fx-border-radius: 5px; " +
-                            "-fx-background-radius: 5px;");
             shakeField(txtName);
             System.out.println("Nome da categoria é obrigatório.");
             return;
@@ -49,6 +49,9 @@ public class CategoryFormController {
     }
 
     private void shakeField(TextField field) {
+        if (!field.getStyle().contains("#D9534F")) {
+            field.setStyle(ERROR_STYLE);
+        }
         TranslateTransition tt = new TranslateTransition(Duration.millis(100), field);
         tt.setFromX(0);
         tt.setByX(10);

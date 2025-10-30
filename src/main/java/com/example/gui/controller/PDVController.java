@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 import com.example.gui.util.Utils;
-import com.example.gui.viewmodels.OrderViewModel;
 import com.example.model.entities.Order;
 import com.example.model.entities.OrderItem;
 import com.example.model.entities.Product;
@@ -45,41 +44,30 @@ import javafx.util.StringConverter;
 public class PDVController implements Initializable {
 
     private ProductService productService;
-
+    private Order order = new Order(null, Instant.now(), null);
+    private ObservableList<OrderItem> observableItems = FXCollections.observableArrayList();
     private ObservableList<Product> masterProductList;
     private FilteredList<Product> filteredProducts;
-    private OrderViewModel orderVM = new OrderViewModel(new Order(null, Instant.now(), null));
 
-    @FXML
-    private Label lblDateTime;
-    @FXML
-    private TextField txtSearchProduct;
-    @FXML
-    private TableView<Product> tableProducts;
-    @FXML
-    private TableColumn<Product, String> colName;
-    @FXML
-    private TableColumn<Product, Double> colPrice;
+    @FXML private TableView<Product> tableProducts;
+    @FXML private TableColumn<Product, String> colName;
+    @FXML private TableColumn<Product, Double> colPrice;
 
-    @FXML
-    private TableView<OrderItem> tableCart;
-    @FXML
-    private TableColumn<OrderItem, String> colCartProduct;
-    @FXML
-    private TableColumn<OrderItem, Integer> colCartQuantity;
-    @FXML
-    private TableColumn<OrderItem, Double> colCartSubtotal;
+    @FXML private TableView<OrderItem> tableCart;
+    @FXML private TableColumn<OrderItem, String> colCartProduct;
+    @FXML private TableColumn<OrderItem, Integer> colCartQuantity;
+    @FXML private TableColumn<OrderItem, Double> colCartSubtotal;
 
-    @FXML
-    private Label lblTotal;
-    @FXML
-    private Label lblOperator;
+    @FXML private Label lblTotal;
+    @FXML private Label lblOperator;
+    @FXML private Label lblDateTime;
+    @FXML private TextField txtSearchProduct;
 
     public PDVController() {
         // Construtor padrão
     }
 
-    @Override
+    @FXML
     public void initialize(URL location, ResourceBundle resources) {
         initializeNodes();
         setupSearchFilter();
@@ -96,7 +84,7 @@ public class PDVController implements Initializable {
     private void onAddToCart() {
         Product selectedProduct = tableProducts.getSelectionModel().getSelectedItem();
         if (selectedProduct != null) {
-            for (OrderItem item : orderVM.getObservableItems()) {
+            for (OrderItem item : observableItems) {
                 if (item.getProduct().equals(selectedProduct)) {
                     item.setQuantity(item.getQuantity() + 1);
                     tableCart.refresh();
@@ -105,15 +93,15 @@ public class PDVController implements Initializable {
                 }
             }
 
-            OrderItem newItem = new OrderItem(orderVM.getOrder(), selectedProduct, 1, selectedProduct.getPrice());
-            orderVM.getObservableItems().add(newItem);
+            OrderItem newItem = new OrderItem(order, selectedProduct, 1, selectedProduct.getPrice());
+            observableItems.add(newItem);
             updateTotal();
         }
     }
 
     @FXML
     private void onCheckout() {
-        if (orderVM.getObservableItems().isEmpty()) {
+        if (observableItems.isEmpty()) {
             showAlert("Carrinho vazio", "Adicione produtos antes de finalizar a venda.");
             return;
         }
@@ -122,16 +110,17 @@ public class PDVController implements Initializable {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/PaymentForm.fxml"));
             Parent root = loader.load();
 
-            // Passa o total para o formulário
             PaymentFormController controller = loader.getController();
-            orderVM.syncToEntity(); // sincroniza itens observáveis com a entidade
-            controller.setTotal(orderVM.getOrder().getTotal());
+
+            order.getItems().clear();
+            order.getItems().addAll(observableItems);
+
+            controller.setTotal(order.getTotal());
 
             controller.setOnPaymentConfirmed(() -> {
-                orderVM.getObservableItems().clear();
+                observableItems.clear();
                 updateTotal();
-                orderVM = new OrderViewModel(new Order(null, Instant.now(), null));
-
+                order = new Order(null, Instant.now(), null);
                 txtSearchProduct.clear();
                 txtSearchProduct.requestFocus();
             });
@@ -149,7 +138,9 @@ public class PDVController implements Initializable {
     }
 
     private void updateTotal() {
-        double total = orderVM.getOrder().getTotal();
+        double total = observableItems.stream()
+                .mapToDouble(OrderItem::getSubTotal)
+                .sum();
         lblTotal.setText(Utils.formatCurrencyBR(total, 2));
     }
 
@@ -169,29 +160,24 @@ public class PDVController implements Initializable {
             return product.getName().toLowerCase().contains(filter);
         });
 
-        // Seleciona automaticamente o primeiro item filtrado
         if (!filteredProducts.isEmpty()) {
             tableProducts.getSelectionModel().select(filteredProducts.get(0));
         }
     }
 
     private void initializeNodes() {
-        // Configuração das colunas da tabela de produtos
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
         colPrice.setCellValueFactory(new PropertyValueFactory<>("price"));
         Utils.formatTableColumnCurrencyBR(colPrice, 2);
 
-        // Configuração das colunas da tabela do carrinho
         colCartProduct.setCellValueFactory(new PropertyValueFactory<>("productName"));
         colCartQuantity.setCellValueFactory(new PropertyValueFactory<>("quantity"));
         colCartSubtotal.setCellValueFactory(new PropertyValueFactory<>("subTotal"));
         Utils.formatTableColumnCurrencyBR(colCartSubtotal, 2);
 
-        setupCartShortcuts();
-
-        // Vincula a lista de itens ao TableView
-        tableCart.setItems(orderVM.getObservableItems());
+        tableCart.setItems(observableItems);
         tableCart.setEditable(true);
+
         colCartQuantity.setCellFactory(column -> new TextFieldTableCell<OrderItem, Integer>(
                 new StringConverter<>() {
                     @Override
@@ -234,7 +220,7 @@ public class PDVController implements Initializable {
                 return;
 
             if (newQuantity <= 0) {
-                orderVM.getObservableItems().remove(item); // Remove item se for zero ou negativo
+                observableItems.remove(item);
             } else {
                 item.setQuantity(newQuantity);
             }
@@ -244,20 +230,14 @@ public class PDVController implements Initializable {
             tableCart.requestFocus();
         });
 
-        // Se pressionar Enter, adiciona o produto selecionado
         tableProducts.setOnKeyPressed(event -> {
-            switch (event.getCode()) {
-                case ENTER:
-                    Product selectedProduct = tableProducts.getSelectionModel().getSelectedItem();
-                    if (selectedProduct != null) {
-                        onAddToCart();
-                    }
-                    break;
-                default:
-                    break;
+            if (event.getCode() == KeyCode.ENTER) {
+                Product selectedProduct = tableProducts.getSelectionModel().getSelectedItem();
+                if (selectedProduct != null) {
+                    onAddToCart();
+                }
             }
         });
-
     }
 
     public void updateTableView() {
@@ -274,14 +254,11 @@ public class PDVController implements Initializable {
 
     private void setupSearchFilter() {
         txtSearchProduct.setOnKeyReleased(event -> {
-            onSearchProduct(event); // delega a filtragem
-
-            // Se pressionar Enter, adiciona o produto selecionado
-            if (event.getCode().toString().equals("ENTER")) {
+            onSearchProduct(event);
+            if (event.getCode() == KeyCode.ENTER) {
                 Product selectedProduct = tableProducts.getSelectionModel().getSelectedItem();
                 if (selectedProduct != null) {
                     onAddToCart();
-                    // txtSearchProduct.clear(); // opcional: limpa o campo após adicionar
                 }
             }
         });
@@ -309,26 +286,26 @@ public class PDVController implements Initializable {
                 return;
 
             switch (event.getCode()) {
-                case PLUS: // Tecla "+"
-                case ADD: // Teclado numérico "+"
+                case PLUS:
+                case ADD:
                     selectedItem.setQuantity(selectedItem.getQuantity() + 1);
                     break;
 
-                case MINUS: // Tecla "-"
-                case SUBTRACT: // Teclado numérico "-"
+                case MINUS:
+                case SUBTRACT:
                     int newQty = selectedItem.getQuantity() - 1;
                     if (newQty <= 0) {
-                        orderVM.getObservableItems().remove(selectedItem);
+                        observableItems.remove(selectedItem);
                     } else {
                         selectedItem.setQuantity(newQty);
                     }
                     break;
 
-                case DELETE: // Remove item diretamente
-                    orderVM.getObservableItems().remove(selectedItem);
+                case DELETE:
+                    observableItems.remove(selectedItem);
                     break;
 
-                case F5: // Finaliza a venda
+                case F5:
                     onCheckout();
                     break;
 
@@ -341,6 +318,7 @@ public class PDVController implements Initializable {
         });
     }
 
+   
     private void setupGlobalShortcuts() {
         Platform.runLater(() -> {
             tableCart.getScene().setOnKeyPressed(event -> {
