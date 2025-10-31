@@ -220,11 +220,6 @@ public class PaymentFormController {
         if (change < 0)
             change = 0;
         lblChange.setText(Utils.formatCurrencyBR(change, 2));
-
-        // Foca no botão se não houver nenhuma forma de pagamento
-        if (paymentItems.isEmpty()) {
-            Platform.runLater(() -> btnAddPayment.requestFocus());
-        }
     }
 
     @FXML
